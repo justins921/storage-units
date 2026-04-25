@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand: 17 24 39;
+  --color-brand-fg: 255 255 255;
+}
+
+html, body {
+  background-color: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
