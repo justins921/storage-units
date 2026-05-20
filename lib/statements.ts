@@ -106,7 +106,7 @@ export async function generateStatement(
     kind: string;
     paid_at: string;
   }[];
-  const unitRows = (units.data ?? []) as Array<{
+  const unitRows = (units.data ?? []) as unknown as Array<{
     id: string;
     label: string;
     status: string;

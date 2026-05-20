@@ -79,7 +79,7 @@ export async function listUnits(facilityId: string): Promise<UnitRow[]> {
     .order('label', { ascending: true });
   if (error) throw error;
   return (data ?? []).map((u) => {
-    const leases = ((u.leases ?? []) as {
+    const leases = ((u.leases ?? []) as unknown as {
       id: string;
       tenant_id: string;
       started_at: string;
@@ -88,7 +88,7 @@ export async function listUnits(facilityId: string): Promise<UnitRow[]> {
       tenant: { email: string } | null;
     }[]).filter((l) => l.status === 'active');
     const active = leases[0];
-    const ut = (u.unit_type ?? {}) as { name?: string };
+    const ut = (u.unit_type ?? {}) as unknown as { name?: string };
     return {
       id: u.id as string,
       label: u.label as string,
@@ -239,7 +239,7 @@ export async function getTenantDetail(
   return {
     ...(t as TenantDetail),
     legacy_balance_cents: ((legacy.data as { amount_cents?: number } | null)?.amount_cents) ?? 0,
-    leases: ((leases.data ?? []) as Array<{
+    leases: ((leases.data ?? []) as unknown as Array<{
       id: string;
       status: string;
       monthly_rate_cents: number;

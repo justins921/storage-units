@@ -17,8 +17,8 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
     {
       cookies: {
         getAll: () => req.cookies.getAll(),
-        setAll: (cookies) => {
-          for (const c of cookies) {
+        setAll: (cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) => {
+          for (const c of cookiesToSet) {
             res.cookies.set(c.name, c.value, c.options);
           }
         },
