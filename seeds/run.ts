@@ -2,8 +2,13 @@
 // (default: chandler) so each client deployment ships with the right data.
 //
 // Usage: SEED=chandler npm run seed
+//
+// To bootstrap an admin user, set SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD.
+// We provision the auth user via the Supabase admin API and link a
+// managers row with facility_access for every seeded facility.
 
 import { serviceDb } from '../lib/db';
+import { DEFAULT_TEMPLATES, DUNNING_SCHEDULE } from '../lib/dunning';
 import type { SeedClient } from './types';
 
 async function loadSeed(name: string): Promise<SeedClient> {
@@ -13,11 +18,76 @@ async function loadSeed(name: string): Promise<SeedClient> {
   return seed;
 }
 
+async function ensureSmsTemplates(facilityId: string): Promise<void> {
+  const db = serviceDb();
+  for (const step of DUNNING_SCHEDULE) {
+    const body = DEFAULT_TEMPLATES[step.key];
+    if (!body) continue;
+    const { data: existing } = await db
+      .from('sms_templates')
+      .select('id')
+      .eq('facility_id', facilityId)
+      .eq('key', step.key)
+      .maybeSingle();
+    if (existing) continue;
+    const { error } = await db.from('sms_templates').insert({
+      facility_id: facilityId,
+      key: step.key,
+      body,
+    });
+    if (error) throw error;
+  }
+}
+
+async function ensureAdminManager(facilityIds: string[]): Promise<void> {
+  const email = process.env.SEED_ADMIN_EMAIL;
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!email || !password) {
+    console.log('[seed] SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set; skipping admin bootstrap.');
+    return;
+  }
+  const db = serviceDb();
+  // admin.* requires the service-role key, which serviceDb() uses.
+  const list = await db.auth.admin.listUsers();
+  let userId: string | undefined = list?.data?.users?.find(
+    (u) => u.email?.toLowerCase() === email.toLowerCase(),
+  )?.id;
+  if (!userId) {
+    const created = await db.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (created.error) throw created.error;
+    userId = created.data.user?.id;
+    if (!userId) throw new Error('admin user creation returned no id');
+    console.log(`[seed] admin user created: ${email}`);
+  } else {
+    console.log(`[seed] admin user already exists: ${email}`);
+  }
+
+  const { data: existing } = await db
+    .from('managers')
+    .select('id, facility_access')
+    .eq('id', userId)
+    .maybeSingle();
+  if (existing) {
+    const merged = Array.from(new Set([...(existing.facility_access ?? []), ...facilityIds]));
+    await db.from('managers').update({ facility_access: merged }).eq('id', userId);
+  } else {
+    await db
+      .from('managers')
+      .insert({ id: userId, email, facility_access: facilityIds });
+  }
+  console.log(`[seed] manager linked to ${facilityIds.length} facilit${facilityIds.length === 1 ? 'y' : 'ies'}`);
+}
+
 async function main(): Promise<void> {
   const name = process.env.SEED ?? 'chandler';
   console.log(`[seed] running seeds/${name}.ts`);
   const seed = await loadSeed(name);
   const db = serviceDb();
+  const facilityIds: string[] = [];
 
   for (const f of seed.facilities) {
     // Upsert facility by slug.
@@ -123,7 +193,12 @@ async function main(): Promise<void> {
       }
       console.log(`[seed]   unit_type "${ut.name}" with ${ut.unit_labels.length} units`);
     }
+
+    await ensureSmsTemplates(facilityId);
+    facilityIds.push(facilityId);
   }
+
+  await ensureAdminManager(facilityIds);
 
   console.log('[seed] done');
 }

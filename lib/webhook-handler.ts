@@ -152,11 +152,39 @@ async function handleInvoicePaid(
   event: Extract<NormalizedEvent, { type: 'invoice.paid' }>,
 ): Promise<void> {
   const db = serviceDb();
-  // Re-activate any past_due lease tied to this subscription. No-op if
-  // already active.
+
+  // Find the lease this subscription belongs to so we can pin the payment
+  // to the right facility/tenant.
+  const { data: lease } = await db
+    .from('leases')
+    .select('id, facility_id, tenant_id')
+    .eq('provider_subscription_id', event.data.subscriptionId)
+    .maybeSingle();
+
+  if (lease) {
+    // Idempotency: unique partial index on payments(provider_invoice_id)
+    // collapses duplicates to the first row.
+    const { error: payErr } = await db.from('payments').insert({
+      facility_id: lease.facility_id,
+      lease_id: lease.id,
+      tenant_id: lease.tenant_id,
+      amount_cents: event.data.amountPaidCents,
+      kind: 'charge',
+      provider_invoice_id: event.data.invoiceId,
+      paid_at: new Date().toISOString(),
+    });
+    if (payErr && !isUniqueViolation(payErr)) throw payErr;
+  }
+
+  // Clear past_due state. Dunning auto-pauses because the cron filters on
+  // status='past_due'.
   await db
     .from('leases')
-    .update({ status: 'active', updated_at: new Date().toISOString() })
+    .update({
+      status: 'active',
+      past_due_since: null,
+      updated_at: new Date().toISOString(),
+    })
     .eq('provider_subscription_id', event.data.subscriptionId)
     .in('status', ['past_due']);
 }
@@ -165,11 +193,24 @@ async function handleInvoiceFailed(
   event: Extract<NormalizedEvent, { type: 'invoice.payment_failed' }>,
 ): Promise<void> {
   const db = serviceDb();
+  // Stamp past_due_since on the first failure of a streak. Subsequent
+  // failures while already past_due preserve the original timestamp so
+  // dunning days-counter doesn't reset.
+  const { data: lease } = await db
+    .from('leases')
+    .select('id, status, past_due_since')
+    .eq('provider_subscription_id', event.data.subscriptionId)
+    .maybeSingle();
+  if (!lease) return;
+
   await db
     .from('leases')
-    .update({ status: 'past_due', updated_at: new Date().toISOString() })
-    .eq('provider_subscription_id', event.data.subscriptionId)
-    .eq('status', 'active');
+    .update({
+      status: 'past_due',
+      past_due_since: lease.past_due_since ?? new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', lease.id);
 }
 
 async function handleSubscriptionDeleted(

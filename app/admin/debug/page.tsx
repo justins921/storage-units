@@ -1,16 +1,15 @@
 import { readMockLog } from '@/lib/providers/mock-log';
 import { serviceDb } from '@/lib/db';
+import { currentManager } from '@/lib/auth';
+import { DevTools } from './dev-tools';
 
 export const dynamic = 'force-dynamic';
 
-// Phase 0 mock debug panel. Renders:
-//   - the in-memory log of mock provider activity (this process only)
-//   - the most recent provider_events rows (durable, all processes)
-//
-// Phase 2 expands this with auth + manual actions. For now it's a
-// no-auth dev surface; do NOT expose this route in production until the
-// admin auth layer lands.
+// Auth-gated debug panel. Shows mock activity (in-memory) and
+// provider_events (durable). Also exposes dev-only helpers that mark
+// a lease past_due so the dunning cron has something to send against.
 export default async function DebugPage() {
+  await currentManager();
   const events = readMockLog(50);
   const { data: providerEvents } = await serviceDb()
     .from('provider_events')
@@ -21,9 +20,12 @@ export default async function DebugPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-2xl font-semibold">Mock provider debug</h1>
-      <p className="mt-2 text-sm text-amber-600">
-        Dev-only. Add auth before exposing in production.
+      <p className="mt-2 text-sm text-gray-500">
+        Auth-gated. Use these tools while testing in mock-provider mode.
       </p>
+
+      <DevTools />
+
 
       <h2 className="mt-8 text-lg font-medium">In-memory mock log</h2>
       <ul className="mt-3 space-y-2">

@@ -9,9 +9,13 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env seeds/run.ts",
-    "cron:expire-locks": "tsx --env-file=.env scripts/expire-locks.ts"
+    "cron:expire-locks": "tsx --env-file=.env scripts/expire-locks.ts",
+    "cron:dunning": "tsx --env-file=.env scripts/dunning.ts",
+    "cron:owner-statements": "tsx --env-file=.env scripts/owner-statements.ts"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.1.5",
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "next": "^15.0.3",
     "react": "^19.0.0",
