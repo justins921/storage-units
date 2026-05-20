@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getFacilityBySlug, listAvailableUnits } from '@/lib/booking';
 import { Badge, Card, Empty } from '@/lib/ui';
+import { SiteFooter } from '@/lib/site-footer';
 import { ReserveButton } from './reserve-button';
 
 export const dynamic = 'force-dynamic';
@@ -122,11 +123,7 @@ export default async function FacilityLanding({
         )}
       </section>
 
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-8 text-xs text-slate-500">
-          © {new Date().getFullYear()} {facility.name}. All rights reserved.
-        </div>
-      </footer>
+      <SiteFooter orgName={facility.name} />
     </main>
   );
 }
