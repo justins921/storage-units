@@ -11,7 +11,7 @@ export function AdminNav({ slug }: { slug: string }) {
     { href: `/admin/${slug}/units`, label: 'Units' },
     { href: `/admin/${slug}/tenants`, label: 'Tenants' },
     { href: `/admin/${slug}/statements`, label: 'Statements' },
-    { href: `/admin/${slug}/settings/sms-templates`, label: 'SMS templates' },
+    { href: `/admin/${slug}/settings`, label: 'Settings' },
     { href: `/admin/debug`, label: 'Debug' },
   ];
 

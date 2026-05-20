@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { currentManager, requireFacility } from '@/lib/auth';
 import { listUnits } from '@/lib/admin-queries';
-import { Card, UnitStatusBadge, dollars } from '@/lib/ui';
+import { Button, Card, UnitStatusBadge, dollars } from '@/lib/ui';
 import { ForceStatusForm } from './force-status-form';
 
 export const dynamic = 'force-dynamic';
@@ -18,14 +18,17 @@ export default async function UnitsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
             {facility.name}
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Units</h1>
+          <p className="mt-1 text-sm text-slate-500">{units.length} total</p>
         </div>
-        <p className="text-sm text-slate-500">{units.length} total</p>
+        <Link href={`/admin/${slug}/settings/unit-types`}>
+          <Button variant="secondary">Manage types &amp; add units</Button>
+        </Link>
       </div>
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
