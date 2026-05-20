@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition, useState } from 'react';
+import { Button } from '@/lib/ui';
 import { generateLastMonth } from './actions';
 
 export function GenerateNowButton({ facilitySlug }: { facilitySlug: string }) {
@@ -10,8 +11,7 @@ export function GenerateNowButton({ facilitySlug }: { facilitySlug: string }) {
   return (
     <div className="flex items-center gap-2">
       {error ? <span className="text-xs text-red-600">{error}</span> : null}
-      <button
-        type="button"
+      <Button
         onClick={() => {
           setError(null);
           startTransition(async () => {
@@ -20,10 +20,9 @@ export function GenerateNowButton({ facilitySlug }: { facilitySlug: string }) {
           });
         }}
         disabled={isPending}
-        className="rounded bg-gray-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
       >
         {isPending ? 'Generating…' : 'Generate last month'}
-      </button>
+      </Button>
     </div>
   );
 }

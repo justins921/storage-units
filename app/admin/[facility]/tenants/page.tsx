@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { currentManager, requireFacility } from '@/lib/auth';
 import { listTenants } from '@/lib/admin-queries';
+import { Badge, Card, Empty, shortDollars } from '@/lib/ui';
 import { TenantSearch } from './tenant-search';
 
 export const dynamic = 'force-dynamic';
@@ -32,42 +33,58 @@ export default async function TenantsPage({
   if (filter === 'active') rows = rows.filter((t) => t.active_leases > 0);
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Tenants</h1>
+    <div className="space-y-6">
+      <div className="flex items-baseline justify-between">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {facility.name}
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+            Tenants
+          </h1>
+        </div>
+        <p className="text-sm text-slate-500">{all.length} total</p>
+      </div>
+
       <TenantSearch facilitySlug={slug} initialQuery={q ?? ''} initialFilter={filter ?? 'all'} />
-      <ul className="mt-4 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
-        {rows.length === 0 ? (
-          <li className="p-4 text-sm text-gray-500">No tenants match.</li>
-        ) : (
-          rows.map((t) => (
-            <li key={t.id} className="flex items-center justify-between gap-3 p-4">
-              <div>
+
+      {rows.length === 0 ? (
+        <Empty title="No tenants match." />
+      ) : (
+        <Card padded={false}>
+          <ul className="divide-y divide-slate-100">
+            {rows.map((t) => (
+              <li key={t.id}>
                 <Link
                   href={`/admin/${slug}/tenants/${t.id}`}
-                  className="text-sm font-medium underline"
+                  className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-slate-50"
                 >
-                  {t.display_name ?? t.email}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {t.display_name ?? t.email}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {t.email}
+                      {t.phone ? ` · ${t.phone}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {t.active_leases > 0 ? (
+                      <Badge tone="emerald">{t.active_leases} active</Badge>
+                    ) : null}
+                    {t.past_due_leases > 0 ? (
+                      <Badge tone="red">{t.past_due_leases} past due</Badge>
+                    ) : null}
+                    <span className="hidden text-xs text-slate-500 sm:inline">
+                      {shortDollars(t.total_paid_cents)} paid
+                    </span>
+                  </div>
                 </Link>
-                <p className="text-xs text-gray-500">
-                  {t.email}
-                  {t.phone ? ` · ${t.phone}` : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <span>{t.active_leases} active</span>
-                {t.past_due_leases > 0 ? (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">
-                    {t.past_due_leases} past due
-                  </span>
-                ) : null}
-                <span className="text-gray-500">
-                  ${(t.total_paid_cents / 100).toFixed(0)} paid
-                </span>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   );
 }

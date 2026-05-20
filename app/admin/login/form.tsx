@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { Button, Field, Input } from '@/lib/ui';
 
 export function LoginForm({ next }: { next: string }) {
   const [email, setEmail] = useState('');
@@ -27,35 +28,27 @@ export function LoginForm({ next }: { next: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 space-y-3">
-      <label className="block text-sm">
-        Email
-        <input
+    <form onSubmit={submit} className="space-y-4">
+      <Field label="Email">
+        <Input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+          placeholder="you@example.com"
         />
-      </label>
-      <label className="block text-sm">
-        Password
-        <input
+      </Field>
+      <Field label="Password" error={error}>
+        <Input
           type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
         />
-      </label>
-      <button
-        type="submit"
-        disabled={isPending || !email || !password}
-        className="w-full rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
+      </Field>
+      <Button type="submit" disabled={isPending || !email || !password} className="w-full">
         {isPending ? 'Signing in…' : 'Sign in'}
-      </button>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      </Button>
     </form>
   );
 }

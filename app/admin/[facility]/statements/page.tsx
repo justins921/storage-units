@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { currentManager, requireFacility } from '@/lib/auth';
 import { serviceDb } from '@/lib/db';
+import { Badge, Button, Card, Empty, shortDollars } from '@/lib/ui';
 import { GenerateNowButton } from './generate-now';
 
 export const dynamic = 'force-dynamic';
@@ -23,55 +24,63 @@ export default async function StatementsPage({
     .order('period_start', { ascending: false });
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Owner statements</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {facility.name}
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+            Owner statements
+          </h1>
+        </div>
         <GenerateNowButton facilitySlug={slug} />
       </div>
 
-      <ul className="mt-6 divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
-        {(data ?? []).length === 0 ? (
-          <li className="p-4 text-sm text-gray-500">
-            No statements yet. Click “Generate last month” to create one.
-          </li>
-        ) : (
-          (data ?? []).map((s) => (
-            <li
-              key={s.id as string}
-              className="flex items-center justify-between gap-3 p-4 text-sm"
-            >
-              <div>
-                <p className="font-medium">
-                  {String(s.period_start)} → {String(s.period_end)}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Generated {new Date(String(s.generated_at)).toLocaleString()}
-                  {s.emailed_at
-                    ? ` · emailed ${new Date(String(s.emailed_at)).toLocaleDateString()}`
-                    : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="font-medium">
-                  ${(Number(s.net_payout_cents) / 100).toFixed(0)}
-                </span>
-                <Link
-                  href={`/admin/${slug}/statements/${s.id}`}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
-                >
-                  View
-                </Link>
-                <Link
-                  href={`/api/admin/statements/${s.id}/pdf`}
-                  className="rounded border border-gray-300 px-2 py-1 text-xs"
-                >
-                  PDF
-                </Link>
-              </div>
-            </li>
-          ))
-        )}
-      </ul>
+      {(data ?? []).length === 0 ? (
+        <Empty
+          title="No statements yet."
+          hint='Click "Generate last month" to create one.'
+        />
+      ) : (
+        <Card padded={false}>
+          <ul className="divide-y divide-slate-100">
+            {(data ?? []).map((s) => (
+              <li
+                key={s.id as string}
+                className="flex flex-wrap items-center justify-between gap-3 p-4"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {String(s.period_start)} → {String(s.period_end)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Generated {new Date(String(s.generated_at)).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  {s.emailed_at ? (
+                    <Badge tone="emerald">Emailed</Badge>
+                  ) : (
+                    <Badge tone="gray">Not emailed</Badge>
+                  )}
+                  <p className="text-sm font-semibold text-slate-900">
+                    {shortDollars(Number(s.net_payout_cents))}
+                  </p>
+                  <Link href={`/admin/${slug}/statements/${s.id}`}>
+                    <Button size="sm" variant="secondary">
+                      View
+                    </Button>
+                  </Link>
+                  <Link href={`/api/admin/statements/${s.id}/pdf`}>
+                    <Button size="sm">PDF</Button>
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </div>
   );
 }

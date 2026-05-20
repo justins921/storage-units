@@ -1,13 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Button, Field, Input } from '@/lib/ui';
 
-interface Props {
-  unitId: string;
-  unitLabel: string;
-}
-
-export function ReserveButton({ unitId, unitLabel }: Props) {
+export function ReserveButton({ unitId, unitLabel }: { unitId: string; unitLabel: string }) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -30,27 +26,24 @@ export function ReserveButton({ unitId, unitLabel }: Props) {
   }
 
   return (
-    <div className="mt-4 space-y-2">
-      <label className="block text-sm text-gray-600">
-        Your email
-        <input
+    <div className="mt-5 space-y-3">
+      <Field label="Your email" error={error}>
+        <Input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm"
         />
-      </label>
-      <button
-        type="button"
+      </Field>
+      <Button
         onClick={reserve}
         disabled={isPending || !email}
-        className="w-full rounded bg-brand px-4 py-2 text-sm font-medium text-brand-fg disabled:opacity-50"
+        className="w-full"
+        variant="primary"
       >
         {isPending ? 'Starting checkout…' : `Reserve unit ${unitLabel}`}
-      </button>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      </Button>
     </div>
   );
 }

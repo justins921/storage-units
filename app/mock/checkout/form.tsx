@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Button } from '@/lib/ui';
 
 interface Props {
   sessionId: string;
@@ -38,22 +39,16 @@ export function MockCheckoutForm({
 
   return (
     <div className="mt-6 space-y-2">
-      <button
-        type="button"
+      <Button
         onClick={() => fire('pay')}
         disabled={isPending}
-        className="w-full rounded bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="w-full bg-emerald-600 hover:bg-emerald-700"
       >
         {isPending ? 'Processing…' : 'Pay (mock)'}
-      </button>
-      <button
-        type="button"
-        onClick={() => fire('cancel')}
-        disabled={isPending}
-        className="w-full rounded border border-gray-300 px-4 py-2 text-sm"
-      >
+      </Button>
+      <Button onClick={() => fire('cancel')} disabled={isPending} variant="secondary" className="w-full">
         Cancel
-      </button>
+      </Button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
   );

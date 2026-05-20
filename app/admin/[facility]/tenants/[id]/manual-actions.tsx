@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Button, Card, Field, Input, Textarea } from '@/lib/ui';
 import { endLease, recordCredit, recordNote, recordRefund, recordWaive } from './actions';
 
 interface Props {
@@ -11,6 +12,14 @@ interface Props {
 }
 
 type ActionKey = 'waive' | 'credit' | 'refund' | 'note' | 'end_lease';
+
+const ACTIONS: { key: ActionKey; label: string }[] = [
+  { key: 'waive', label: 'Waive' },
+  { key: 'credit', label: 'Credit' },
+  { key: 'refund', label: 'Refund' },
+  { key: 'note', label: 'Note' },
+  { key: 'end_lease', label: 'End lease' },
+];
 
 export function ManualActionsPanel(props: Props) {
   const [active, setActive] = useState<ActionKey>('waive');
@@ -83,64 +92,73 @@ export function ManualActionsPanel(props: Props) {
       }
       setAmount('');
       setNotes('');
-      setDone(`${active} recorded`);
+      setDone(`${active.replace('_', ' ')} recorded`);
     });
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+    <Card>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
         Manual actions
       </h3>
-      <div className="mt-3 flex flex-wrap gap-1 text-xs">
-        {(['waive', 'credit', 'refund', 'note', 'end_lease'] as ActionKey[]).map((k) => (
+
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {ACTIONS.map((a) => (
           <button
-            key={k}
+            key={a.key}
             type="button"
-            onClick={() => setActive(k)}
-            className={`rounded px-2 py-1 ${
-              active === k ? 'bg-gray-900 text-white' : 'border border-gray-300'
+            onClick={() => {
+              setActive(a.key);
+              setError(null);
+              setDone(null);
+            }}
+            className={`rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+              active === a.key
+                ? 'bg-slate-900 text-white'
+                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
-            {k.replace('_', ' ')}
+            {a.label}
           </button>
         ))}
       </div>
-      {needsAmount[active] ? (
-        <label className="mt-3 block text-xs">
-          Amount (USD)
-          <input
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
+
+      <div className="mt-4 space-y-3">
+        {needsAmount[active] ? (
+          <Field label="Amount (USD)">
+            <Input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+            />
+          </Field>
+        ) : null}
+        <Field label="Notes">
+          <Textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Optional"
           />
-        </label>
-      ) : null}
-      <label className="mt-3 block text-xs">
-        Notes
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-sm"
-        />
-      </label>
-      <button
-        type="button"
-        onClick={submit}
-        disabled={isPending}
-        className="mt-3 w-full rounded bg-gray-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
-        {isPending ? 'Saving…' : `Record ${active.replace('_', ' ')}`}
-      </button>
-      {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
-      {done ? <p className="mt-2 text-xs text-emerald-700">{done}</p> : null}
-      {!props.activeLeaseId ? (
-        <p className="mt-3 text-xs text-gray-500">No active lease — only “note” works.</p>
-      ) : null}
-    </div>
+        </Field>
+        <Button
+          variant={active === 'end_lease' ? 'danger' : 'primary'}
+          onClick={submit}
+          disabled={isPending}
+          className="w-full"
+        >
+          {isPending ? 'Saving…' : `Record ${active.replace('_', ' ')}`}
+        </Button>
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        {done ? <p className="text-xs text-emerald-700">{done}</p> : null}
+        {!props.activeLeaseId ? (
+          <p className="text-xs text-slate-500">
+            No active lease — only “note” works.
+          </p>
+        ) : null}
+      </div>
+    </Card>
   );
 }

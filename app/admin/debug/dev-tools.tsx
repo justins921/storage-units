@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Button, Card, Field, Input } from '@/lib/ui';
 import {
   backdatePastDue,
   runDunningNow,
@@ -25,84 +26,92 @@ export function DevTools() {
   }
 
   return (
-    <section className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-amber-700">Dev tools</h2>
+    <Card className="border-amber-200 bg-amber-50/50">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-amber-800">
+          Dev tools
+        </h2>
+        <span className="text-[10px] uppercase tracking-wider text-amber-700">
+          Mock mode
+        </span>
+      </div>
       <p className="mt-1 text-xs text-amber-800">
-        Simulate provider events against a known subscription ID. Use the value shown on a
-        lease (provider_subscription_id) to test dunning + auto-pause.
+        Simulate provider events against a known subscription ID (see lease detail).
       </p>
 
-      <div className="mt-3 flex flex-wrap items-end gap-2 text-xs">
-        <label className="flex-1">
-          Subscription ID
-          <input
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <Field label="Subscription ID">
+          <Input
             value={subId}
             onChange={(e) => setSubId(e.target.value)}
             placeholder="sub_mock_…"
-            className="mt-1 w-full rounded border border-amber-300 bg-white px-2 py-1"
+            className="font-mono"
           />
-        </label>
-        <label>
-          Amount (USD)
-          <input
+        </Field>
+        <Field label="Amount (USD)">
+          <Input
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="mt-1 w-24 rounded border border-amber-300 bg-white px-2 py-1"
+            className="w-28"
           />
-        </label>
-        <button
-          type="button"
-          disabled={isPending || !subId}
-          onClick={() => call(() => simulateInvoicePaid({ subId, amount }))}
-          className="rounded border border-emerald-400 bg-emerald-100 px-2 py-1 text-emerald-800 disabled:opacity-50"
-        >
-          invoice.paid
-        </button>
-        <button
-          type="button"
-          disabled={isPending || !subId}
-          onClick={() => call(() => simulateInvoiceFailed({ subId, amount }))}
-          className="rounded border border-red-400 bg-red-100 px-2 py-1 text-red-800 disabled:opacity-50"
-        >
-          invoice.payment_failed
-        </button>
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => call(() => runDunningNow())}
-          className="rounded border border-gray-400 bg-white px-2 py-1 disabled:opacity-50"
-        >
-          Run dunning
-        </button>
+        </Field>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-end gap-2 text-xs">
-        <label>
-          Days ago
-          <input
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={isPending || !subId}
+          onClick={() => call(() => simulateInvoicePaid({ subId, amount }))}
+          className="bg-emerald-700 hover:bg-emerald-800"
+        >
+          invoice.paid
+        </Button>
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={isPending || !subId}
+          onClick={() => call(() => simulateInvoiceFailed({ subId, amount }))}
+          className="bg-red-700 hover:bg-red-800"
+        >
+          invoice.payment_failed
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={isPending}
+          onClick={() => call(() => runDunningNow())}
+        >
+          Run dunning
+        </Button>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end gap-2">
+        <Field label="Days ago">
+          <Input
             value={daysAgo}
             onChange={(e) => setDaysAgo(e.target.value)}
-            className="mt-1 w-20 rounded border border-amber-300 bg-white px-2 py-1"
+            className="w-24"
           />
-        </label>
-        <button
-          type="button"
+        </Field>
+        <Button
+          size="sm"
+          variant="secondary"
           disabled={isPending || !subId}
           onClick={() => call(() => backdatePastDue({ subId, daysAgo }))}
-          className="rounded border border-amber-400 bg-white px-2 py-1 disabled:opacity-50"
         >
           Backdate past_due
-        </button>
-        <span className="text-amber-800">
-          (mark a lease past_due as if it failed N days ago)
-        </span>
+        </Button>
+        <p className="text-xs text-amber-800">
+          Marks a lease past_due as if it failed N days ago.
+        </p>
       </div>
 
       {out ? (
-        <pre className="mt-3 overflow-auto rounded bg-white p-2 text-xs text-gray-700">
+        <pre className="mt-4 overflow-auto rounded-lg bg-white p-3 text-xs text-slate-700">
           {out}
         </pre>
       ) : null}
-    </section>
+    </Card>
   );
 }

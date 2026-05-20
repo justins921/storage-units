@@ -1,5 +1,6 @@
 import { currentManager, requireFacility } from '@/lib/auth';
 import { dashboardSummary } from '@/lib/admin-queries';
+import { Stat, shortDollars } from '@/lib/ui';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,30 +14,44 @@ export default async function FacilityDashboard({
   const facility = await requireFacility(manager, slug);
   const s = await dashboardSummary(facility.id);
 
-  const cards = [
-    { label: 'Occupancy', value: `${s.occupancyPercent}%`, sub: `${s.occupiedCount}/${s.unitCount} units` },
-    { label: 'Available', value: String(s.availableCount), sub: 'ready to rent' },
-    { label: 'Past due', value: String(s.pastDueCount), sub: 'leases' },
-    {
-      label: 'Revenue 30d',
-      value: `$${(s.revenueLast30dCents / 100).toFixed(0)}`,
-      sub: 'collected',
-    },
-  ];
-
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">{facility.name}</h1>
-      <p className="mt-1 text-sm text-gray-500">/{slug}</p>
-      <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {cards.map((c) => (
-          <li key={c.label} className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs uppercase tracking-wide text-gray-500">{c.label}</p>
-            <p className="mt-1 text-2xl font-semibold">{c.value}</p>
-            <p className="text-xs text-gray-500">{c.sub}</p>
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-8">
+      <header>
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+          Dashboard
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          {facility.name}
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">/{slug}</p>
+      </header>
+
+      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Stat
+          label="Occupancy"
+          value={`${s.occupancyPercent}%`}
+          sub={`${s.occupiedCount}/${s.unitCount} units`}
+          tone={s.occupancyPercent > 80 ? 'emerald' : 'amber'}
+        />
+        <Stat
+          label="Available"
+          value={s.availableCount}
+          sub="ready to rent"
+          tone="emerald"
+        />
+        <Stat
+          label="Past due"
+          value={s.pastDueCount}
+          sub="leases"
+          tone={s.pastDueCount > 0 ? 'red' : 'gray'}
+        />
+        <Stat
+          label="Revenue · 30d"
+          value={shortDollars(s.revenueLast30dCents)}
+          sub="collected"
+          tone="blue"
+        />
+      </section>
     </div>
   );
 }

@@ -1,13 +1,11 @@
 import { readMockLog } from '@/lib/providers/mock-log';
 import { serviceDb } from '@/lib/db';
 import { currentManager } from '@/lib/auth';
+import { Badge, Card, Empty } from '@/lib/ui';
 import { DevTools } from './dev-tools';
 
 export const dynamic = 'force-dynamic';
 
-// Auth-gated debug panel. Shows mock activity (in-memory) and
-// provider_events (durable). Also exposes dev-only helpers that mark
-// a lease past_due so the dunning cron has something to send against.
 export default async function DebugPage() {
   await currentManager();
   const events = readMockLog(50);
@@ -18,59 +16,77 @@ export default async function DebugPage() {
     .limit(25);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-2xl font-semibold">Mock provider debug</h1>
-      <p className="mt-2 text-sm text-gray-500">
-        Auth-gated. Use these tools while testing in mock-provider mode.
-      </p>
+    <main className="mx-auto max-w-5xl px-6 py-10">
+      <div>
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+          Internal
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          Debug
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Auth-gated tools for testing mock-provider flows.
+        </p>
+      </div>
 
-      <DevTools />
+      <div className="mt-8">
+        <DevTools />
+      </div>
 
+      <section className="mt-10">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          In-memory mock log
+        </h2>
+        <div className="mt-3 space-y-2">
+          {events.length === 0 ? (
+            <Empty title="No mock activity yet." />
+          ) : (
+            events.map((e) => (
+              <Card key={e.id} padded={false}>
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2">
+                  <span className="font-mono text-xs text-slate-500">
+                    {e.at.toISOString()} · {e.provider}
+                  </span>
+                  <Badge tone="violet">{e.kind}</Badge>
+                </div>
+                <pre className="overflow-auto px-4 py-3 text-xs text-slate-700">
+                  {JSON.stringify(e.payload, null, 2)}
+                </pre>
+              </Card>
+            ))
+          )}
+        </div>
+      </section>
 
-      <h2 className="mt-8 text-lg font-medium">In-memory mock log</h2>
-      <ul className="mt-3 space-y-2">
-        {events.length === 0 ? (
-          <li className="text-sm text-gray-500">No mock activity yet.</li>
-        ) : (
-          events.map((e) => (
-            <li key={e.id} className="rounded border border-gray-200 bg-white p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-gray-500">
-                  {e.at.toISOString()} · {e.provider}
-                </span>
-                <span className="text-xs font-medium">{e.kind}</span>
-              </div>
-              <pre className="mt-1 overflow-auto text-xs text-gray-700">
-                {JSON.stringify(e.payload, null, 2)}
-              </pre>
-            </li>
-          ))
-        )}
-      </ul>
-
-      <h2 className="mt-10 text-lg font-medium">provider_events (last 25)</h2>
-      <ul className="mt-3 space-y-2">
-        {(providerEvents ?? []).map((e) => (
-          <li
-            key={e.id as string}
-            className="rounded border border-gray-200 bg-white p-3 text-sm"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs text-gray-500">
-                {String(e.received_at)} · {String(e.provider)}
-              </span>
-              <span className="text-xs font-medium">{String(e.event_type)}</span>
-            </div>
-            <p className="mt-1 text-xs text-gray-600">id: {String(e.event_id)}</p>
-            <p className="text-xs text-gray-600">
-              processed: {e.processed_at ? String(e.processed_at) : '—'}
-            </p>
-            {e.error ? (
-              <p className="text-xs text-red-600">error: {String(e.error)}</p>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      <section className="mt-10">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          provider_events (last 25)
+        </h2>
+        <div className="mt-3 space-y-2">
+          {(providerEvents ?? []).length === 0 ? (
+            <Empty title="No webhook events yet." />
+          ) : (
+            (providerEvents ?? []).map((e) => (
+              <Card key={e.id as string}>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-slate-500">
+                    {String(e.received_at)} · {String(e.provider)}
+                  </span>
+                  <Badge tone={e.error ? 'red' : e.processed_at ? 'emerald' : 'amber'}>
+                    {String(e.event_type)}
+                  </Badge>
+                </div>
+                <p className="mt-2 font-mono text-[11px] text-slate-500">
+                  id: {String(e.event_id)}
+                </p>
+                {e.error ? (
+                  <p className="mt-1 text-xs text-red-600">error: {String(e.error)}</p>
+                ) : null}
+              </Card>
+            ))
+          )}
+        </div>
+      </section>
     </main>
   );
 }

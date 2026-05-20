@@ -1,11 +1,9 @@
 import { serviceDb } from '@/lib/db';
+import { Empty } from '@/lib/ui';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-// Root page lists configured facilities. Per-facility landing pages live
-// at /[facility]. In production we'll switch on subdomain vs. slug routing
-// based on host header; for the scaffold a slug list is sufficient.
 export default async function Home() {
   const { data: facilities } = await serviceDb()
     .from('facilities')
@@ -13,27 +11,46 @@ export default async function Home() {
     .order('name', { ascending: true });
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold">{process.env.ORG_NAME ?? 'Storage Co'}</h1>
-      <p className="mt-2 text-gray-600">Choose a facility to reserve a unit.</p>
-      <ul className="mt-8 space-y-3">
-        {(facilities ?? []).map((f) => (
-          <li key={f.slug}>
-            <Link
-              href={`/${f.slug}`}
-              className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-400"
-            >
-              <span className="text-lg font-medium">{f.name}</span>
-              <span className="ml-2 text-sm text-gray-500">/{f.slug}</span>
-            </Link>
-          </li>
-        ))}
-        {(facilities ?? []).length === 0 && (
-          <li className="rounded-lg border border-dashed border-gray-300 p-6 text-sm text-gray-500">
-            No facilities seeded yet. Run <code>npm run seed</code>.
-          </li>
+    <main className="mx-auto max-w-4xl px-6 py-20">
+      <div className="space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+          {process.env.ORG_NAME ?? 'Storage Co'}
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+          Self-storage, reserved online.
+        </h1>
+        <p className="max-w-xl text-base text-slate-600">
+          Pick a facility to browse available units and reserve in under two minutes.
+        </p>
+      </div>
+
+      <div className="mt-12">
+        {(facilities ?? []).length === 0 ? (
+          <Empty
+            title="No facilities published yet."
+            hint="Run the seed once your Supabase project is provisioned."
+          />
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {(facilities ?? []).map((f) => (
+              <li key={f.slug}>
+                <Link
+                  href={`/${f.slug}`}
+                  className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-card transition-all hover:border-slate-300 hover:shadow-cardHover"
+                >
+                  <div>
+                    <p className="text-base font-medium text-slate-900">{f.name}</p>
+                    <p className="text-xs text-slate-500">storage.example.com/{f.slug}</p>
+                  </div>
+                  <span className="text-slate-400 transition-transform group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
-      </ul>
+      </div>
     </main>
   );
 }

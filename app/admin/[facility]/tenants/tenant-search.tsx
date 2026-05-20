@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button, Input, Select } from '@/lib/ui';
 
 const FILTERS = [
   { value: 'all', label: 'All' },
@@ -31,37 +32,32 @@ export function TenantSearch({
   }
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2">
-      <input
+    <div className="flex flex-wrap items-center gap-2">
+      <Input
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') go(q, filter);
         }}
         placeholder="Search email, name, phone"
-        className="w-64 rounded border border-gray-300 px-3 py-2 text-sm"
+        className="w-64"
       />
-      <select
+      <Select
         value={filter}
         onChange={(e) => {
           setFilter(e.target.value);
           go(q, e.target.value);
         }}
-        className="rounded border border-gray-300 px-2 py-2 text-sm"
       >
         {FILTERS.map((f) => (
           <option key={f.value} value={f.value}>
             {f.label}
           </option>
         ))}
-      </select>
-      <button
-        type="button"
-        onClick={() => go(q, filter)}
-        className="rounded border border-gray-300 px-3 py-2 text-sm"
-      >
+      </Select>
+      <Button variant="secondary" onClick={() => go(q, filter)}>
         Search
-      </button>
+      </Button>
     </div>
   );
 }

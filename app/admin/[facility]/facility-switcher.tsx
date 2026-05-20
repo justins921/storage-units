@@ -1,5 +1,7 @@
 'use client';
 
+import { Select } from '@/lib/ui';
+
 export function FacilitySwitcher({
   currentSlug,
   facilities,
@@ -8,18 +10,18 @@ export function FacilitySwitcher({
   facilities: { id: string; slug: string; name: string }[];
 }) {
   return (
-    <select
+    <Select
       defaultValue={currentSlug}
-      className="rounded border border-gray-300 px-2 py-1 text-sm"
       onChange={(e) => {
         window.location.href = `/admin/${e.target.value}`;
       }}
+      className="text-sm"
     >
       {facilities.map((f) => (
         <option key={f.id} value={f.slug}>
           {f.name}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }

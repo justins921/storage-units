@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Button, Textarea } from '@/lib/ui';
 import { saveSmsTemplate } from './actions';
 
 interface Props {
@@ -33,33 +34,26 @@ export function SmsTemplateForm(props: Props) {
   }
 
   return (
-    <div className="mt-3 space-y-2">
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        rows={3}
-        className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
-      />
-      <div className="flex items-center justify-between text-xs">
-        <label className="flex items-center gap-2">
+    <div className="mt-3 space-y-3">
+      <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3} />
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2 text-xs text-slate-700">
           <input
             type="checkbox"
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-slate-300"
           />
           Enabled
         </label>
-        <div className="flex items-center gap-3">
-          {done ? <span className="text-emerald-700">{done}</span> : null}
-          {error ? <span className="text-red-600">{error}</span> : null}
-          <button
-            type="button"
-            onClick={submit}
-            disabled={isPending}
-            className="rounded bg-gray-900 px-3 py-1 text-white disabled:opacity-50"
-          >
+        <div className="flex items-center gap-2">
+          {done ? (
+            <span className="text-xs font-medium text-emerald-700">{done}</span>
+          ) : null}
+          {error ? <span className="text-xs text-red-600">{error}</span> : null}
+          <Button size="sm" onClick={submit} disabled={isPending}>
             {isPending ? 'Saving…' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

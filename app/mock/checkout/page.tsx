@@ -1,13 +1,8 @@
+import { Badge, Card } from '@/lib/ui';
 import { MockCheckoutForm } from './form';
 
 export const dynamic = 'force-dynamic';
 
-// Stand-in for a hosted Stripe Checkout page. Shown only when
-// PAYMENT_PROVIDER=mock. The form POSTs synthesized webhook events to our
-// own /api/webhooks/payment endpoint, then redirects to success/cancel.
-//
-// Read query params on the server, hand them to a client form for the
-// actual POST.
 export default async function MockCheckoutPage({
   searchParams,
 }: {
@@ -19,24 +14,20 @@ export default async function MockCheckoutPage({
 
   return (
     <main className="mx-auto max-w-md px-6 py-16">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <p className="text-xs uppercase tracking-wide text-amber-600">Mock checkout</p>
-        <h1 className="mt-1 text-xl font-semibold">Confirm reservation</h1>
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-gray-500">Unit</dt>
-            <dd>
-              {get('unit_label')} ({get('unit_type')})
-            </dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-gray-500">Email</dt>
-            <dd>{get('email')}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-gray-500">Monthly</dt>
-            <dd>${(amountCents / 100).toFixed(2)}</dd>
-          </div>
+      <Card>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Checkout
+          </p>
+          <Badge tone="amber">Mock</Badge>
+        </div>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          Confirm reservation
+        </h1>
+        <dl className="mt-6 divide-y divide-slate-100 text-sm">
+          <Row label="Unit" value={`${get('unit_label')} (${get('unit_type')})`} />
+          <Row label="Email" value={get('email')} />
+          <Row label="Monthly" value={`$${(amountCents / 100).toFixed(2)}`} bold />
         </dl>
         <MockCheckoutForm
           sessionId={get('session_id')}
@@ -45,7 +36,16 @@ export default async function MockCheckoutPage({
           metadataJson={get('metadata')}
           email={get('email')}
         />
-      </div>
+      </Card>
     </main>
+  );
+}
+
+function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+  return (
+    <div className="flex justify-between py-2.5">
+      <dt className="text-slate-500">{label}</dt>
+      <dd className={bold ? 'font-semibold text-slate-900' : 'text-slate-700'}>{value}</dd>
+    </div>
   );
 }
