@@ -25,7 +25,7 @@ export async function GET(
 
   const snapshot = data.snapshot_json as StatementSnapshot;
   const pdf = await renderStatementPdf(snapshot);
-  return new Response(pdf, {
+  return new Response(new Uint8Array(pdf), {
     headers: {
       'content-type': 'application/pdf',
       'content-disposition': `attachment; filename="statement-${snapshot.facility.slug}-${snapshot.period_start}.pdf"`,
